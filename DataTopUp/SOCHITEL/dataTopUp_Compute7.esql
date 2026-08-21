@@ -1,0 +1,84 @@
+BROKER SCHEMA SOCHITEL
+
+CREATE COMPUTE MODULE dataTopUp_Compute7
+
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+
+        ------------------------------------------------------------------
+        -- 🔐 STEP 1: SIGNATURE VALIDATION (FIRST LINE OF DEFENSE) -- DISABLED
+        ------------------------------------------------------------------
+        -- DECLARE incomingSig CHARACTER InputRoot.HTTPInputHeader."X-Signature";
+        -- DECLARE nonceVal    CHARACTER InputRoot.HTTPInputHeader."X-Timestamp"; 
+        -- DECLARE payload CHARACTER
+        --     CAST(InputRoot.JSON.Data.username             AS CHARACTER) ||
+        --     CAST(InputRoot.JSON.Data.password AS CHARACTER);
+        -- 
+        -- DECLARE secretKey   CHARACTER '3953432ebd391c3cabcfd9e397c5cdcc34fac494e8fd876a11c70261652dea43';
+        -- DECLARE isValid     CHARACTER;
+        -- 
+        -- CALL validateSig(payload, nonceVal, incomingSig, secretKey) INTO isValid;
+        -- 
+        -- IF isValid <> 'true' OR isValid IS NULL THEN
+        --     RETURN buildError('Invalid signature. Request rejected.', 401);
+        -- END IF;
+
+        ------------------------------------------------------------------
+        -- 🔑 STEP 2: CREDENTIAL VALIDATION
+        ------------------------------------------------------------------
+        DECLARE username CHARACTER TRIM(InputRoot.JSON.Data.username);
+        DECLARE password CHARACTER TRIM(InputRoot.JSON.Data.password);
+
+        IF username IS NULL OR password IS NULL THEN
+            RETURN buildError('Missing username or password', 400);
+        END IF;
+
+        ------------------------------------------------------------------
+        -- 🔐 STEP 3: GENERATE JWT
+        ------------------------------------------------------------------
+        DECLARE token CHARACTER;
+        CALL generateJWT(username, password) INTO token;
+
+        IF STARTSWITH(token, 'ERROR') THEN
+            RETURN buildError('Invalid credentials', 401);
+        END IF;
+
+        ------------------------------------------------------------------
+        -- ✅ SUCCESS RESPONSE
+        ------------------------------------------------------------------
+        DELETE FIELD OutputRoot.*;
+        SET OutputRoot.Properties.ContentType = 'application/json';
+        CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON' NAME 'JSON';
+
+        SET OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" = 200;
+        SET OutputRoot.JSON.Data.status = 'Success';
+        SET OutputRoot.JSON.Data.token  = token;
+        SET OutputRoot.JSON.Data.expiresIn = 3600;
+
+        RETURN TRUE;
+
+    END;
+
+    CREATE FUNCTION buildError(msg CHARACTER, code INTEGER) RETURNS BOOLEAN
+    BEGIN
+        DELETE FIELD OutputRoot.*;
+        SET OutputRoot.Properties.ContentType = 'application/json';
+        CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON' NAME 'JSON';
+
+--        SET OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" = code;
+        SET OutputRoot.JSON.Data.status  = 'Failed';
+        SET OutputRoot.JSON.Data.message = msg;
+		Propagate to Terminal 'out1';
+        RETURN FALSE;
+    END;
+
+    CREATE PROCEDURE generateJWT(IN username CHARACTER, IN password CHARACTER)
+    RETURNS CHARACTER
+    LANGUAGE JAVA
+    EXTERNAL NAME "com.sochitel.security.JwtUtils.generateToken";
+
+    -- CREATE PROCEDURE validateSig(IN payload CHARACTER, IN nonce CHARACTER, IN incomingSig CHARACTER, IN secretKey CHARACTER)
+    -- RETURNS CHARACTER LANGUAGE JAVA
+    -- EXTERNAL NAME "com.sochitel.security.SecurityUtils.validate";
+
+END MODULE;

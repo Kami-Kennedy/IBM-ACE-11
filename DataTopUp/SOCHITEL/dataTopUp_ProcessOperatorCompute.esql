@@ -1,0 +1,172 @@
+BROKER SCHEMA SOCHITEL
+
+DECLARE DSN EXTERNAL CHARACTER '';
+
+CREATE COMPUTE MODULE dataTopUp_ProcessOperatorCompute
+
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+        BEGIN
+            DECLARE CONTINUE HANDLER FOR SQLSTATE LIKE '%'
+            BEGIN
+                SET Environment.Variable.OperatorSync.SyncStatus = 'FAILED';
+                SET Environment.Variable.OperatorSync.LastError  =
+                    'ProcessOperatorResponse failed at ' ||
+                    CAST(CURRENT_GMTTIMESTAMP AS CHARACTER);
+            END;
+            CALL ProcessOperatorResponse();
+        END;
+        RETURN TRUE;
+    END;
+
+    CREATE FUNCTION ProcessOperatorResponse()
+    BEGIN
+        DECLARE operatorsRef REFERENCE TO InputRoot.JSON.Data;
+        DECLARE totalOps     INTEGER CARDINALITY(operatorsRef.*[]);
+        DECLARE idx          INTEGER 1;
+
+        WHILE idx <= totalOps DO
+            DECLARE opRef        REFERENCE TO operatorsRef.*[idx];
+            DECLARE opId         CHARACTER COALESCE(CAST(opRef.id AS CHARACTER),                   '');
+            DECLARE opName       CHARACTER COALESCE(opRef.name,                                    '');
+            DECLARE opCountry    CHARACTER COALESCE(opRef.country.id,                              '');
+            DECLARE opCurrency   CHARACTER COALESCE(opRef.currency,                                '');
+            DECLARE opBrandId    CHARACTER COALESCE(CAST(opRef.brandId AS CHARACTER),              '');
+            DECLARE opProdTypeId CHARACTER COALESCE(CAST(opRef.productType.id AS CHARACTER),       '');
+            DECLARE opProdTypeName CHARACTER COALESCE(opRef.productType.name,                      '');
+
+            -- Serialize locations and prefixes arrays as comma-separated strings
+            DECLARE opLocations  CHARACTER '';
+            DECLARE opPrefixes   CHARACTER '';
+            DECLARE arrIdx       INTEGER 1;
+
+            -- Build locations string
+            DECLARE totalLoc INTEGER CARDINALITY(opRef.locations.*[]);
+            WHILE arrIdx <= totalLoc DO
+                IF arrIdx > 1 THEN
+                    SET opLocations = opLocations || ',';
+                END IF;
+                SET opLocations = opLocations ||
+                    COALESCE(CAST(opRef.locations.*[arrIdx] AS CHARACTER), '');
+                SET arrIdx = arrIdx + 1;
+            END WHILE;
+
+            -- Build prefixes string
+            SET arrIdx = 1;
+            DECLARE totalPfx INTEGER CARDINALITY(opRef.prefixes.*[]);
+            WHILE arrIdx <= totalPfx DO
+                IF arrIdx > 1 THEN
+                    SET opPrefixes = opPrefixes || ',';
+                END IF;
+                SET opPrefixes = opPrefixes ||
+                    COALESCE(CAST(opRef.prefixes.*[arrIdx] AS CHARACTER), '');
+                SET arrIdx = arrIdx + 1;
+            END WHILE;
+
+            -- Only process allowed countries using exact token match
+            IF CONTAINS_TOKEN(opCountry) THEN
+                BEGIN
+                    DECLARE CONTINUE HANDLER FOR SQLSTATE LIKE '%'
+                    BEGIN
+                        SET Environment.Variable.OperatorSync.LastError =
+                            'UpsertOperator failed for opId=' || opId ||
+                            ' at ' || CAST(CURRENT_GMTTIMESTAMP AS CHARACTER);
+                    END;
+                    CALL UpsertOperator(
+                        opId, opName, opCountry, opCurrency,
+                        opBrandId, opProdTypeId, opProdTypeName,
+                        opLocations, opPrefixes
+                    );
+                END;
+            END IF;
+
+            SET idx = idx + 1;
+        END WHILE;
+
+        -- Commit all DML after processing all operators
+        COMMIT;
+    END;
+
+    -- ─────────────────────────────────────────────────────────
+    -- Exact token match for allowed countries
+    -- ─────────────────────────────────────────────────────────
+    CREATE FUNCTION CONTAINS_TOKEN(IN opCountry CHARACTER)
+    RETURNS BOOLEAN
+    BEGIN
+        DECLARE allowedList CHARACTER
+            'GH,BJ,CM,BF,GA,GN,KE,SL,ML,MZ,SN,TZ,UG,ZM,CD,CG,TD,CI,LR';
+
+        -- Wrap both list and search term with commas for exact boundary match
+        RETURN CONTAINS(',' || allowedList || ',', ',' || opCountry || ',');
+    END;
+
+    -- ─────────────────────────────────────────────────────────
+    -- Upsert: UPDATE if exists, INSERT if not
+    -- ─────────────────────────────────────────────────────────
+    CREATE FUNCTION UpsertOperator(
+        IN p_id          CHARACTER,
+        IN p_name        CHARACTER,
+        IN p_country     CHARACTER,
+        IN p_currency    CHARACTER,
+        IN p_brandId     CHARACTER,
+        IN p_prodTypeId  CHARACTER,
+        IN p_prodTypeName CHARACTER,
+        IN p_locations   CHARACTER,
+        IN p_prefixes    CHARACTER
+    )
+    BEGIN
+        DECLARE accRow  ROW;
+        DECLARE accRow1 ROW;
+        DECLARE accRow2 ROW;
+
+        -- Check existence
+        SET accRow.rec = PASSTHRU(
+            'SELECT OPERATOR_ID FROM ESBUSER.OPERATORS WHERE OPERATOR_ID = ?'
+            TO Database.{DSN}
+            VALUES(p_id)
+        );
+
+        DECLARE recRef REFERENCE TO accRow.rec[>];
+
+        IF LASTMOVE(recRef) THEN
+            -- Record exists → UPDATE
+            SET accRow1.rec = PASSTHRU(
+                'UPDATE ESBUSER.OPERATORS ' ||
+                'SET OPERATOR_NAME = ?, '    ||
+                'COUNTRY_CODE = ?, '         ||
+                'CURRENCY = ?, '             ||
+                'BRAND_ID = ?, '             ||
+                'PRODUCT_TYPE_ID = ?, '      ||
+                'PRODUCT_TYPE_NAME = ?, '    ||
+                'LOCATIONS = ?, '            ||
+                'PREFIXES = ?, '             ||
+                'UPDATED_AT = SYSDATE '      ||
+                'WHERE OPERATOR_ID = ?'
+                TO Database.{DSN}
+                VALUES(
+                    p_name, p_country, p_currency,
+                    p_brandId, p_prodTypeId, p_prodTypeName,
+                    p_locations, p_prefixes, p_id
+                )
+            );
+        ELSE
+            -- Record does not exist → INSERT
+            SET accRow2.rec = PASSTHRU(
+                'INSERT INTO ESBUSER.OPERATORS '  ||
+                '(OPERATOR_ID, OPERATOR_NAME, '   ||
+                'COUNTRY_CODE, CURRENCY, '        ||
+                'BRAND_ID, PRODUCT_TYPE_ID, '     ||
+                'PRODUCT_TYPE_NAME, LOCATIONS, '  ||
+                'PREFIXES, CREATED_AT, UPDATED_AT)' ||
+                ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, SYSDATE, SYSDATE)'
+                TO Database.{DSN}
+                VALUES(
+                    p_id, p_name, p_country, p_currency,
+                    p_brandId, p_prodTypeId, p_prodTypeName,
+                    p_locations, p_prefixes
+                )
+            );
+        END IF;
+    END;
+
+END MODULE;

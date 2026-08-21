@@ -1,0 +1,39 @@
+BROKER SCHEMA SOCHITEL
+
+CREATE COMPUTE MODULE dataTopUp_Compute2
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE exc_desc CHARACTER getExceptionDesc(InputRoot, OutputRoot, InputExceptionList);
+		
+		SET OutputRoot.JSON.Data.Response.status = 'Failed';
+		SET OutputRoot.JSON.Data.Response.message = 'System error occurred during transaction';
+		SET OutputRoot.JSON.Data.Response.error = RIGHT(exc_desc, 500);
+		SET OutputRoot.JSON.Data.Response.timestamp = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd HH:mm:ss.SSS');
+		
+		RETURN TRUE;
+	END;
+	
+	-- Helper function to get exception description
+	CREATE FUNCTION getExceptionDesc(IN InputRoot REFERENCE, IN OutputRoot REFERENCE, IN InputExceptionList REFERENCE) RETURNS CHARACTER
+	BEGIN
+		DECLARE exceptionText CHARACTER '';
+		DECLARE exceptionRef REFERENCE TO InputExceptionList.*[1];
+		
+		WHILE LASTMOVE(exceptionRef) DO
+			IF EXISTS(exceptionRef.Text[]) THEN
+				SET exceptionText = exceptionText || exceptionRef.Text || ' | ';
+			END IF;
+			IF EXISTS(exceptionRef.Insert[]) THEN
+				DECLARE insertRef REFERENCE TO exceptionRef.Insert[1];
+				WHILE LASTMOVE(insertRef) DO
+					SET exceptionText = exceptionText || insertRef.Text || ' ';
+					MOVE insertRef NEXTSIBLING;
+				END WHILE;
+			END IF;
+			MOVE exceptionRef NEXTSIBLING;
+		END WHILE;
+		
+		RETURN exceptionText;
+	END;
+	
+END MODULE;

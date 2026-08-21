@@ -1,0 +1,134 @@
+
+
+BROKER SCHEMA SOCHITEL
+
+CREATE COMPUTE MODULE dataTopUp_Compute3
+
+	DECLARE secretKey EXTERNAL CHARACTER '';
+
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		------------------------------------------------------------------
+		-- 🔁 SECOND PASS (JWT ALREADY VALIDATED)
+		------------------------------------------------------------------
+		IF Environment.Variables.JWTAuthentication = 'success' THEN
+
+			SET OutputRoot = InputRoot;
+
+			DECLARE httpCommand CHARACTER Environment.Variables.httpCommand;
+			DECLARE sochitelPos INTEGER POSITION('/sochitelData/' IN httpCommand);
+			DECLARE countryCode CHARACTER '';
+			-- ✅ Country code sits BEFORE /sochitelData/ in the URL
+			-- URL format: POST https://host:port/ML/sochitelData/orangea/payment HTTP/1.1
+			IF sochitelPos > 0 THEN
+				-- Extract the segment before /sochitelData/
+				DECLARE beforeSochitel CHARACTER SUBSTRING(httpCommand FROM 1 FOR sochitelPos - 1);
+				-- Find the last slash before /sochitelData/
+				DECLARE tempLen INTEGER LENGTH(beforeSochitel);
+				DECLARE lastSlashPos INTEGER 0;
+				DECLARE i INTEGER 1;
+
+				WHILE i <= tempLen DO
+					IF SUBSTRING(beforeSochitel FROM i FOR 1) = '/' THEN
+						SET lastSlashPos = i;
+					END IF;
+					SET i = i + 1;
+				END WHILE;
+				-- Extract everything after the last slash = country code
+				IF lastSlashPos > 0 THEN
+					SET countryCode = UPPER(SUBSTRING(beforeSochitel FROM lastSlashPos + 1));
+				END IF;
+
+			END IF;
+
+			IF countryCode = '' OR countryCode IS NULL THEN
+				SET Environment.Variables.CountryCode = 'UNKNOWN';
+				SET Environment.Variables.RoutingError = 'CountryCode could not be parsed from: ' || httpCommand;
+			ELSE
+				SET Environment.Variable.CountryCode = countryCode;
+			END IF;
+
+			RETURN TRUE;
+
+		END IF;
+		------------------------------------------------------------------
+		-- 🔐 FIRST PASS: SIGNATURE VALIDATION
+		------------------------------------------------------------------
+		DECLARE incomingSig CHARACTER InputRoot.HTTPInputHeader."X-Signature";
+		DECLARE nonceVal CHARACTER InputRoot.HTTPInputHeader."X-Timestamp";
+		-- ✅ Save HTTP command now while InputRoot is still the HTTP message
+		SET Environment.Variables.httpCommand =
+		COALESCE(InputRoot.HTTPInputHeader."X-Original-HTTP-Command", '');
+
+		DECLARE payload CHARACTER
+		CAST(InputRoot.JSON.Data.msisdn AS CHARACTER) ||
+		CAST(InputRoot.JSON.Data.productId AS CHARACTER) ||
+		CAST(InputRoot.JSON.Data.amount AS CHARACTER);
+
+		DECLARE isValidSig CHARACTER;
+		CALL validateSig(payload, nonceVal, incomingSig, secretKey) INTO isValidSig;
+
+		IF isValidSig <> 'true' OR isValidSig IS NULL THEN
+			RETURN buildError('Invalid signature. Request rejected.', 401);
+		END IF;
+		------------------------------------------------------------------
+		-- 🔐 JWT VALIDATION
+		------------------------------------------------------------------
+		DECLARE authHeader CHARACTER InputRoot.HTTPInputHeader."Authorization";
+		DECLARE token CHARACTER;
+
+--		IF authHeader IS NULL OR NOT STARTSWITH(authHeader, 'Bearer ') THEN
+--			RETURN buildError('Missing or invalid Authorization header', 401);
+--		END IF;
+
+		SET token = SUBSTRING(authHeader FROM 8);
+
+		DECLARE isValidJWT CHARACTER;
+		CALL validateJWT(token) INTO isValidJWT;
+
+		IF isValidJWT <> 'true' THEN
+			RETURN buildError('Invalid or expired token', 401);
+		END IF;
+		------------------------------------------------------------------
+		-- ✅ MARK SUCCESS + STORE INPUT
+		------------------------------------------------------------------
+		SET Environment.Variables.JWTAuthentication = 'success';
+		SET Environment.Variables.Input = InputRoot.JSON.Data;
+		------------------------------------------------------------------
+		-- 🔁 SECOND PASS TRIGGER
+		------------------------------------------------------------------
+		PROPAGATE TO TERMINAL 'out2';
+		RETURN FALSE;
+
+	END;
+	------------------------------------------------------------------
+	-- ❌ ERROR BUILDER
+	------------------------------------------------------------------
+	CREATE FUNCTION buildError(msg CHARACTER, code INTEGER) RETURNS BOOLEAN
+	BEGIN
+		DELETE FIELD OutputRoot.*;
+		SET OutputRoot.Properties.ContentType = 'application/json';
+		CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON' NAME 'JSON';
+
+--		SET OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" = code;
+		SET OutputRoot.JSON.Data.status = 'Failed';
+		SET OutputRoot.JSON.Data.message = msg;
+		PROPAGATE TO TERMINAL 'out1';
+		RETURN FALSE;
+	END;
+	------------------------------------------------------------------
+	-- 🔗 JAVA INTEGRATIONS
+	------------------------------------------------------------------
+	CREATE PROCEDURE validateSig(IN payload CHARACTER, IN nonce CHARACTER, IN incomingSig CHARACTER, IN secretKey CHARACTER)
+	RETURNS CHARACTER LANGUAGE JAVA
+	EXTERNAL NAME "com.sochitel.security.SecurityUtils.validate";
+
+	CREATE PROCEDURE validateJWT(IN token CHARACTER)
+	RETURNS CHARACTER LANGUAGE JAVA
+	EXTERNAL NAME "com.sochitel.security.JwtUtils.validateToken";
+
+	CREATE PROCEDURE sha512encryption(IN password CHARACTER)
+	RETURNS CHARACTER LANGUAGE JAVA
+	EXTERNAL NAME "com.ubagroup.sha1.Sha1Encryption.getSecurePassword";
+
+END MODULE;

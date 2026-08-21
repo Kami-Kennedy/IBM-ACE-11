@@ -1,0 +1,48 @@
+BROKER SCHEMA SOCHITEL
+
+CREATE COMPUTE MODULE dataTopUp_Compute5
+
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+        CALL FetchAndSyncOperators();
+        RETURN TRUE;
+    END;
+
+    CREATE FUNCTION FetchAndSyncOperators()
+    BEGIN
+        DECLARE passwordhash CHARACTER;
+        DECLARE reqBody      CHARACTER;
+
+        -- Generate SHA512 credentials via Java bridge
+        CALL sha512encryption(PASSWORD) INTO passwordhash;
+
+        SET Environment.Variable.passwordhash = SUBSTRING(passwordhash BEFORE '.');
+        SET Environment.Variable.salt         = SUBSTRING(passwordhash AFTER '.');
+
+        -- Build JSON request body
+        SET reqBody =
+            '{"auth":{"username":"' || USERNAME                          ||
+            '","salt":"'            || Environment.Variable.salt         ||
+            '","password":"'        || Environment.Variable.passwordhash ||
+            '","signature":""},'   ||
+            '"command":"getOperators","version":"5"}';
+
+        -- Store metadata in Environment
+        SET Environment.Variable.OperatorSync.RequestBody   = reqBody;
+        SET Environment.Variable.OperatorSync.RequestURL    = 'https://artx.sochitel.com/api.php';
+        SET Environment.Variable.OperatorSync.RequestMethod = 'POST';
+        SET Environment.Variable.OperatorSync.SyncStatus    = 'PENDING';
+        SET Environment.Variable.OperatorSync.LastSyncTime  = CURRENT_GMTTIMESTAMP;
+
+        -- Prepare HTTP output for JCN
+        SET OutputRoot.HTTPRequestHeader."Content-Type" = 'application/json';
+        SET OutputRoot.BLOB.BLOB = CAST(reqBody AS BLOB CCSID 1208);
+
+    END;
+
+    CREATE PROCEDURE sha512encryption(IN password CHARACTER)
+    RETURNS CHARACTER
+    LANGUAGE JAVA
+    EXTERNAL NAME "com.ubagroup.sha1.Sha1Encryption.getSecurePassword";
+
+END MODULE;

@@ -1,0 +1,68 @@
+BROKER SCHEMA SOCHITEL
+
+
+CREATE COMPUTE MODULE dataTopUp_Compute9
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		 -- Always clear output first
+        DELETE FIELD OutputRoot;
+        SET OutputRoot.HTTPInputHeader.(XMLNSC.Attribute)xmlns = '';
+
+        -- msisdn is retrieved from Environment (saved before the Sochitel HTTP call)
+        DECLARE msisdn CHARACTER COALESCE(
+            CAST(Environment.Variable.msisdn AS CHARACTER), ''
+        );
+
+        IF msisdn = '' OR msisdn IS NULL THEN
+            CALL BuildErrorResponse('Failed', 'msisdn is missing from request');
+            RETURN TRUE;
+        END IF;
+
+        -- Handle exception from upstream
+        DECLARE statuscode INTEGER CAST(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" AS INTEGER);
+
+        IF FIELDNAME(InputExceptionList.[1]) = 'RecoverableException' THEN
+           DECLARE exc_desc CHARACTER;
+    		SET exc_desc = CAST(InputExceptionList.[1].Description AS CHARACTER);
+            CALL BuildErrorResponse('Failed', 'Unable to parse msisdn');
+            SET OutputRoot.JSON.Data.Response.error = RIGHT(exc_desc, 200);
+            RETURN TRUE;
+        ELSEIF statuscode = 200 THEN
+
+            -- Read values directly from Sochitel response in InputRoot.JSON.Data
+            DECLARE sochitelStatusId  INTEGER   CAST(InputRoot.JSON.Data.status.id   AS INTEGER);
+            DECLARE sochitelStatusMsg CHARACTER CAST(InputRoot.JSON.Data.status.name AS CHARACTER);
+            DECLARE operatorName      CHARACTER CAST(InputRoot.JSON.Data.result.operator.name AS CHARACTER);
+
+            SET Environment.Variable.ParseMsisdn.RawResponse = CAST(InputRoot.JSON.Data AS CHARACTER);
+
+            IF sochitelStatusId = 0 THEN
+                -- Successful response from Sochitel
+                SET Environment.Variable.OperatorName           = operatorName;
+                SET Environment.Variable.ParseMsisdn.SyncStatus = 'SUCCESS';
+                SET OutputRoot.JSON.Data.Response.status        = 'Success';
+                SET OutputRoot.JSON.Data.Response.message       = operatorName;
+            ELSE
+                -- Sochitel returned a non-zero status (error)
+                SET Environment.Variable.ParseMsisdn.SyncStatus = 'FAILED';
+                CALL BuildErrorResponse('Failed', COALESCE(sochitelStatusMsg, 'parseMsisdn failed'));
+            END IF;
+
+        ELSE
+            -- Non-200 HTTP status and no exception: generic failure
+            CALL BuildErrorResponse('Failed', 'Unable to parse msisdn');
+        END IF;
+
+        RETURN TRUE;
+    END;
+
+    CREATE PROCEDURE BuildErrorResponse(
+        IN p_status  CHARACTER,
+        IN p_message CHARACTER
+    )
+    BEGIN
+        DELETE FIELD OutputRoot.JSON;
+        SET OutputRoot.JSON.Data.Response.status  = p_status;
+        SET OutputRoot.JSON.Data.Response.message = p_message;
+    END;
+END MODULE;

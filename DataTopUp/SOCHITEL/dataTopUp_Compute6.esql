@@ -1,0 +1,121 @@
+
+
+
+
+BROKER SCHEMA SOCHITEL
+
+CREATE COMPUTE MODULE dataTopUp_Compute6
+
+	DECLARE USERNAME EXTERNAL CHARACTER '';
+	DECLARE PASSWORD EXTERNAL CHARACTER '';
+	DECLARE secretKey EXTERNAL CHARACTER '';
+
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		------------------------------------------------------------------
+		-- 🔁 SECOND PASS (JWT ALREADY VALIDATED)
+		------------------------------------------------------------------
+		IF Environment.Variables.JWTAuthentication = 'success' THEN
+
+			DELETE FIELD OutputRoot.*;
+			SET OutputRoot.Properties.ContentType = 'application/json';
+			CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON' NAME 'JSON';
+
+			DECLARE inRef REFERENCE TO Environment.Variables.Input;
+			DECLARE salt CHARACTER;
+			DECLARE passwordhash CHARACTER;
+
+			CALL sha512encryption(PASSWORD) INTO passwordhash;
+
+			SET Environment.Variable.passwordhash = SUBSTRING(passwordhash BEFORE '.');
+			SET Environment.Variable.salt = SUBSTRING(passwordhash AFTER '.');
+			SET Environment.Variable.msisdn = CAST(inRef.msisdn AS CHARACTER);
+
+			SET OutputRoot.JSON.Data.auth.username = USERNAME;
+			SET OutputRoot.JSON.Data.auth.salt = Environment.Variable.salt;
+			SET OutputRoot.JSON.Data.auth.password = Environment.Variable.passwordhash;
+			SET OutputRoot.JSON.Data.auth.signature = '';
+			SET OutputRoot.JSON.Data.version = '5';
+			SET OutputRoot.JSON.Data.command = 'parseMsisdn';
+			SET OutputRoot.JSON.Data.msisdn = inRef.msisdn;
+
+			PROPAGATE TO TERMINAL 'out'; -- ✅ propagate AFTER JSON is fully built
+			RETURN FALSE; -- ✅ RETURN FALSE to stop further processing here
+		END IF;
+		------------------------------------------------------------------
+		-- 🔐 FIRST PASS: SIGNATURE VALIDATION
+		------------------------------------------------------------------
+		DECLARE incomingSig CHARACTER InputRoot.HTTPInputHeader."X-Signature";
+		DECLARE nonceVal CHARACTER InputRoot.HTTPInputHeader."X-Timestamp";
+		DECLARE payload CHARACTER CAST(InputRoot.JSON.Data.msisdn AS CHARACTER);
+
+
+		DECLARE isValidSig CHARACTER;
+		CALL validateSig(payload, nonceVal, incomingSig, secretKey) INTO isValidSig;
+
+		IF isValidSig <> 'true' OR isValidSig IS NULL THEN
+			RETURN buildError('Invalid customer', 401);
+		END IF;
+		------------------------------------------------------------------
+		-- 🔐 JWT VALIDATION (LOCAL JAVA CALL)
+		------------------------------------------------------------------
+		DECLARE authHeader CHARACTER InputRoot.HTTPInputHeader."Authorization";
+		DECLARE token CHARACTER;
+
+		IF authHeader IS NULL OR NOT STARTSWITH(authHeader, 'Bearer ') THEN
+			RETURN buildError('Missing or invalid Authorization header', 401);
+		END IF;
+
+		SET token = SUBSTRING(authHeader FROM 8);
+
+		DECLARE isValidJWT CHARACTER;
+		CALL validateJWT(token) INTO isValidJWT;
+
+		IF isValidJWT <> 'true' THEN
+			RETURN buildError('Invalid or expired token', 401);
+		END IF;
+		------------------------------------------------------------------
+		-- ✅ MARK SUCCESS + STORE INPUT
+		------------------------------------------------------------------
+		SET Environment.Variables.JWTAuthentication = 'success';
+		SET Environment.Variables.Input = InputRoot.JSON.Data;
+		------------------------------------------------------------------
+		-- 🔁 SECOND PASS TRIGGER
+		------------------------------------------------------------------
+		PROPAGATE TO TERMINAL 'out2';
+		RETURN FALSE;
+
+	END;
+	------------------------------------------------------------------
+	-- 🔁 ERROR BUILDER
+	------------------------------------------------------------------
+	CREATE FUNCTION buildError(msg CHARACTER, code INTEGER) RETURNS BOOLEAN
+	BEGIN
+		DELETE FIELD OutputRoot.*;
+		SET OutputRoot.Properties.ContentType = 'application/json';
+		CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON' NAME 'JSON';
+
+--		SET OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" = code;
+		SET OutputRoot.JSON.Data.Response.status = 'failed';
+		SET OutputRoot.JSON.Data.Response.message = msg;
+		Propagate to terminal 'out1';
+		RETURN FALSE;
+	END;
+	------------------------------------------------------------------
+	-- 🔗 JAVA INTEGRATIONS
+	------------------------------------------------------------------
+	CREATE PROCEDURE validateSig(IN payload CHARACTER, IN nonce CHARACTER, IN incomingSig CHARACTER, IN secretKey CHARACTER)
+	RETURNS CHARACTER LANGUAGE JAVA
+	EXTERNAL NAME "com.sochitel.security.SecurityUtils.validate";
+
+	CREATE PROCEDURE validateJWT(IN token CHARACTER)
+	RETURNS CHARACTER
+	LANGUAGE JAVA
+	EXTERNAL NAME "com.sochitel.security.JwtUtils.validateToken";
+
+	CREATE PROCEDURE sha512encryption(IN password CHARACTER)
+	RETURNS CHARACTER
+	LANGUAGE JAVA
+	EXTERNAL NAME "com.ubagroup.sha1.Sha1Encryption.getSecurePassword";
+
+END MODULE;

@@ -1,0 +1,140 @@
+BROKER SCHEMA SOCHITEL
+DECLARE CAMTEL_OPERATOR EXTERNAL CHARACTER '570';
+DECLARE CANALPLUS_OPERATOR EXTERNAL CHARACTER '571';
+DECLARE GLOTELHO_OPERATOR EXTERNAL CHARACTER '2066';
+DECLARE ESIM_CM_OPERATOR EXTERNAL CHARACTER '2683';
+DECLARE ORANGE_CM_OPERATOR_AIRTIME EXTERNAL CHARACTER '67';
+DECLARE ORANGE_CM_OPERATOR_DATA EXTERNAL CHARACTER '2928';
+DECLARE STARTIMES_OPERATOR EXTERNAL CHARACTER '1496';
+DECLARE YOOMEE_OPERATOR_TOPUP EXTERNAL CHARACTER '2204';
+
+
+CREATE COMPUTE MODULE PaymentHandler_Compute3
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE inRef REFERENCE TO InputRoot.JSON.Data;
+		DECLARE salt, passwordhash CHARACTER;
+		DECLARE uniqueUserReference CHARACTER;
+		DECLARE operatorId CHARACTER;
+		DECLARE urlPath CHARACTER;
+		DECLARE operatorName CHARACTER '';
+		
+		-- Store original input for reference
+		SET Environment.Variables.inpMsg = inRef;
+		
+		-- Get the URL from the HTTP header
+		-- From trace: X-Original-HTTP-Command = 'POST http://172.20.236.28:7831/sochitelData/orange/payment HTTP/1.1'
+		DECLARE httpCommand CHARACTER Environment.Variables.httpCommand;
+		
+		-- Extract the path from the HTTP command
+		-- Format: POST http://server:port/path HTTP/1.1
+		DECLARE startPos INTEGER POSITION('/sochitelData/' IN httpCommand);
+		IF startPos > 0 THEN
+			DECLARE endPos INTEGER POSITION(' HTTP/' IN httpCommand FROM startPos);
+			IF endPos > 0 THEN
+				SET urlPath = SUBSTRING(httpCommand FROM startPos FOR endPos - startPos);
+			ELSE
+				SET urlPath = SUBSTRING(httpCommand FROM startPos);
+			END IF;
+		ELSE
+			SET urlPath = '';
+		END IF;
+		
+		-- Debug: Store the extracted URL
+		SET Environment.Variables.httpCommand = httpCommand;
+		SET Environment.Variables.urlPath = urlPath;
+		
+		-- Extract operator from URL path using LIKE pattern
+		SET urlPath = LOWER(urlPath);
+		
+		IF urlPath LIKE '%/camtel/%' OR urlPath LIKE '%/camtel' THEN
+			SET operatorName = 'camtel';
+			SET operatorId = CAMTEL_OPERATOR;
+		ELSEIF urlPath LIKE '%/canalplus/%' OR urlPath LIKE '%/canalplus' THEN
+			SET operatorName = 'canalplus';
+			SET operatorId = CANALPLUS_OPERATOR;
+		ELSEIF urlPath LIKE '%/glotelho/%' OR urlPath LIKE '%/glotelho' THEN
+			SET operatorName = 'glotelho';
+			SET operatorId = GLOTELHO_OPERATOR;
+		ELSEIF urlPath LIKE '%/esim/%' OR urlPath LIKE '%/esim' THEN
+			SET operatorName = 'esim';
+			SET operatorId = ESIM_CM_OPERATOR;
+		ELSEIF urlPath LIKE '%/orangea/%' OR urlPath LIKE '%/orangea' THEN
+			SET operatorName = 'orangea';
+			SET operatorId = ORANGE_CM_OPERATOR_AIRTIME;
+		ELSEIF urlPath LIKE '%/oranged/%' OR urlPath LIKE '%/oranged' THEN
+			SET operatorName = 'oranged';
+			SET operatorId = ORANGE_CM_OPERATOR_DATA;
+		ELSEIF urlPath LIKE '%/startimes/%' OR urlPath LIKE '%/startimes' THEN
+			SET operatorName = 'startimes';
+			SET operatorId = STARTIMES_OPERATOR;
+		ELSEIF urlPath LIKE '%/yoomeetu/%' OR urlPath LIKE '%/yoomeetu' THEN
+			SET operatorName = 'yoomeetu';
+			SET operatorId = YOOMEE_OPERATOR_TOPUP;
+	
+		ELSE
+			-- Check if operator exists in input
+			IF EXISTS(inRef.operator[]) AND inRef.operator <> '' THEN
+				SET operatorId = CAST(inRef.operator AS CHARACTER);
+				SET operatorName = 'from_body';
+			ELSE
+				-- Neither URL nor input has operator
+				THROW USER EXCEPTION MESSAGE 2951 
+					VALUES('Operator not found in URL. URL path: ' || urlPath || 
+					       ', Full command: ' || httpCommand);
+			END IF;
+		END IF;
+		
+		-- Debug: Store extracted values
+		SET Environment.Variables.extractedOperator = operatorName;
+		SET Environment.Variables.finalOperatorId = operatorId;
+		
+		-- Validate operator ID
+		IF operatorId IS NULL OR operatorId = '' THEN
+			THROW USER EXCEPTION MESSAGE 2951 
+				VALUES('Operator ID is empty. Operator name: ' || operatorName);
+		END IF;
+		
+		SET uniqueUserReference = generateUniqueReference();
+		
+		CALL sha512encryption(PASSWORD) INTO passwordhash;
+		
+		SET Environment.Variable.passwordhash = SUBSTRING(passwordhash BEFORE '.');
+		SET Environment.Variable.salt = SUBSTRING(passwordhash AFTER '.');
+		
+		SET OutputRoot.JSON.Data.auth.username = USERNAME;
+		SET OutputRoot.JSON.Data.auth.salt = Environment.Variable.salt;
+		SET OutputRoot.JSON.Data.auth.password = Environment.Variable.passwordhash;
+		SET OutputRoot.JSON.Data.command = 'execTransaction';
+		SET OutputRoot.JSON.Data.operator = CAST(operatorId AS INTEGER);
+		SET OutputRoot.JSON.Data.msisdn = inRef.msisdn;
+		SET OutputRoot.JSON.Data.accountId = inRef.accountId;
+		SET OutputRoot.JSON.Data.amount = inRef.amount;
+		SET OutputRoot.JSON.Data.userReference = uniqueUserReference;
+		SET OutputRoot.JSON.Data.simulate = '0';
+		SET OutputRoot.JSON.Data.productId = inRef.productId;
+		SET OutputRoot.JSON.Data.version = '5';
+		
+		RETURN TRUE;
+	END;
+	
+	CREATE FUNCTION generateUniqueReference() RETURNS CHARACTER
+	BEGIN
+		DECLARE uuid CHARACTER;
+		DECLARE CurrTimeStamp CHARACTER;
+		DECLARE uniqueRef CHARACTER;
+		
+		SET CurrTimeStamp = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHmmssSSS');
+		SET uuid = SUBSTRING(REPLACE(UUIDASCHAR, '-', '') FROM 1 FOR 13);
+		SET uniqueRef = CurrTimeStamp || uuid;
+		
+		RETURN uniqueRef;
+	END;
+	
+	CREATE PROCEDURE sha512encryption(IN password CHARACTER)
+	RETURNS CHARACTER
+	LANGUAGE JAVA
+	EXTERNAL NAME "com.ubagroup.sha1.Sha1Encryption.getSecurePassword";
+
+END MODULE;

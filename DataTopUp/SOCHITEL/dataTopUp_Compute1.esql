@@ -1,0 +1,105 @@
+BROKER SCHEMA SOCHITEL
+CREATE COMPUTE MODULE dataTopUp_Compute1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE statuscode INTEGER CAST(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" AS INTEGER);
+		DECLARE inRef REFERENCE TO Environment.Variables.inpMsg;
+		DECLARE respRef REFERENCE TO InputRoot.JSON.Data;
+		
+		-- Handle exceptions first
+		IF FIELDNAME(InputExceptionList.[1]) = 'RecoverableException' THEN
+			DECLARE exc_desc CHARACTER getExceptionDesc(InputRoot, OutputRoot, InputExceptionList);
+			SET OutputRoot.JSON.Data.Response.status = 'Failed';
+			SET OutputRoot.JSON.Data.Response.message = 'Unable to execute transaction';
+			SET OutputRoot.JSON.Data.Response.error = RIGHT(exc_desc, 200);
+			RETURN TRUE;
+		END IF;
+		
+		-- Handle successful HTTP response
+		IF statuscode = 200 THEN
+			-- Check if response structure exists
+			IF EXISTS(respRef.status[]) THEN
+				DECLARE statusId INTEGER respRef.status.id;
+				DECLARE statusName CHARACTER respRef.status.name;
+				DECLARE statusType INTEGER respRef.status.type;
+				
+				-- Build common response fields
+				SET OutputRoot.JSON.Data.Response.statusId = statusId;
+				SET OutputRoot.JSON.Data.Response.message = statusName;
+				SET OutputRoot.JSON.Data.Response.reference = respRef.reference;
+				SET OutputRoot.JSON.Data.Response.timestamp = respRef.timestamp;
+				
+				-- Check transaction status type
+				CASE statusType
+					WHEN 1 THEN
+						-- Transaction successful
+						SET OutputRoot.JSON.Data.Response.status = 'Success';
+						SET OutputRoot.JSON.Data.Response.transactionId = respRef.result.id;
+						SET OutputRoot.JSON.Data.Response.userReference = respRef.result.userReference;
+						SET OutputRoot.JSON.Data.Response.operator = respRef.result.operator.name;
+						SET OutputRoot.JSON.Data.Response.msisdn = respRef.result.msisdn;
+						SET OutputRoot.JSON.Data.Response.amount = respRef.result.amount.user;
+						SET OutputRoot.JSON.Data.Response.currency = respRef.result.currency.user;
+						SET OutputRoot.JSON.Data.Response.productId = respRef.result.productId;
+						
+					WHEN 2 THEN
+						-- Transaction failed at operator level
+						SET OutputRoot.JSON.Data.Response.status = 'Failed';
+						SET OutputRoot.JSON.Data.Response.userReference = respRef.result.userReference;
+						SET OutputRoot.JSON.Data.Response.operator = respRef.result.operator.name;
+						SET OutputRoot.JSON.Data.Response.msisdn = respRef.result.msisdn;
+						
+					ELSE
+						-- Unknown/Other status type
+						SET OutputRoot.JSON.Data.Response.status = 'Unknown';
+						SET OutputRoot.JSON.Data.Response.statusType = statusType;
+				END CASE;
+				
+			ELSE
+				-- Invalid response structure
+				SET OutputRoot.JSON.Data.Response.status = 'Failed';
+				SET OutputRoot.JSON.Data.Response.message = 'Invalid response structure from operator';
+				SET OutputRoot.JSON.Data.Response.rawResponse = respRef;
+			END IF;
+			
+		ELSE
+			-- Non-200 HTTP status
+			SET OutputRoot.JSON.Data.Response.status = 'Failed';
+			SET OutputRoot.JSON.Data.Response.message = 'HTTP error occurred';
+			SET OutputRoot.JSON.Data.Response.httpStatus = statuscode;
+			
+			-- Try to extract error message from response if available
+			IF EXISTS(respRef.message[]) THEN
+				SET OutputRoot.JSON.Data.Response.errorDetail = respRef.message;
+			ELSEIF EXISTS(respRef.error[]) THEN
+				SET OutputRoot.JSON.Data.Response.errorDetail = respRef.error;
+			END IF;
+		END IF;
+		
+		RETURN TRUE;
+	END;
+	
+	-- Helper function to get exception description
+	CREATE FUNCTION getExceptionDesc(IN InputRoot REFERENCE, IN OutputRoot REFERENCE, IN InputExceptionList REFERENCE) RETURNS CHARACTER
+	BEGIN
+		DECLARE exceptionText CHARACTER '';
+		DECLARE exceptionRef REFERENCE TO InputExceptionList.*[1];
+		
+		WHILE LASTMOVE(exceptionRef) DO
+			IF EXISTS(exceptionRef.Text[]) THEN
+				SET exceptionText = exceptionText || exceptionRef.Text || ' | ';
+			END IF;
+			IF EXISTS(exceptionRef.Insert[]) THEN
+				DECLARE insertRef REFERENCE TO exceptionRef.Insert[1];
+				WHILE LASTMOVE(insertRef) DO
+					SET exceptionText = exceptionText || insertRef.Text || ' ';
+					MOVE insertRef NEXTSIBLING;
+				END WHILE;
+			END IF;
+			MOVE exceptionRef NEXTSIBLING;
+		END WHILE;
+		
+		RETURN exceptionText;
+	END;
+	
+END MODULE;

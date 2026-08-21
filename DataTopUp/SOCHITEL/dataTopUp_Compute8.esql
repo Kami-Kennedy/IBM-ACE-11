@@ -1,0 +1,56 @@
+BROKER SCHEMA SOCHITEL
+
+CREATE COMPUTE MODULE dataTopUp_Compute8
+
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+        CALL BuildResponse();
+        RETURN TRUE;
+    END;
+
+    CREATE PROCEDURE BuildResponse()
+    BEGIN
+        DECLARE httpStatusCode INTEGER;
+        SET httpStatusCode = InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code";
+        DELETE FIELD OutputRoot.*;
+
+        SET OutputRoot.Properties.ContentType = 'application/json';
+
+        CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON' NAME 'JSON';
+
+       
+        IF httpStatusCode = 200 THEN
+
+            DECLARE tokenValue CHARACTER InputRoot.JSON.Data.token;
+            DECLARE expiresIn INTEGER 3600;
+            
+            -- DECLARE nonceValue CHARACTER;
+            -- CALL getNonce('') INTO nonceValue;
+
+            SET OutputRoot.JSON.Data.Response.status      = 'Success';
+            SET OutputRoot.JSON.Data.Response.Token       = tokenValue;
+            SET OutputRoot.JSON.Data.Response.token_type  = 'Bearer';
+          --  SET OutputRoot.JSON.Data.Response.expires_in  = expiresIn;
+
+            -- Optional future enhancement
+            -- SET OutputRoot.JSON.Data.Response.nonce = nonceValue;
+
+        
+        ELSE
+
+            DECLARE errMsg CHARACTER 
+                COALESCE(InputRoot.JSON.Data.message, 'Authentication Failure');
+
+            SET OutputRoot.JSON.Data.Response.status  = 'Failed';
+            SET OutputRoot.JSON.Data.Response.message = errMsg;
+
+        END IF;
+
+    END;
+
+ 
+--    CREATE PROCEDURE getNonce(IN dummy CHARACTER)
+--    RETURNS CHARACTER LANGUAGE JAVA
+--    EXTERNAL NAME "security.SecurityUtils.getNonceAsString";
+
+END MODULE;

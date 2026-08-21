@@ -1,0 +1,25 @@
+# IBM ACE / Eclipse workspace metadata
+.metadata/
+.settings/
+
+# Java build output
+bin/
+target/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Generated BAR files
+*.bar
+
+# Backup files
+*.bak
+*.swp

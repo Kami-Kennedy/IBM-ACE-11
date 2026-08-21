@@ -1,0 +1,22 @@
+BROKER SCHEMA SOCHITEL
+
+CREATE COMPUTE MODULE dataTopUp_Compute4
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+        -- Cancel any existing timer first to avoid duplicates
+        CREATE FIELD OutputLocalEnvironment.TimeoutRequest;
+        SET OutputLocalEnvironment.TimeoutRequest.Action     = 'CANCEL';
+        SET OutputLocalEnvironment.TimeoutRequest.Identifier = 'OpSyncTimer';
+        PROPAGATE TO TERMINAL 'out';
+
+        -- Set new repeating 30-minute timer
+        DELETE FIELD OutputLocalEnvironment.TimeoutRequest;
+        CREATE FIELD OutputLocalEnvironment.TimeoutRequest;
+        SET OutputLocalEnvironment.TimeoutRequest.Action     = 'SET';
+        SET OutputLocalEnvironment.TimeoutRequest.Identifier = 'OpSyncTimer';
+        SET OutputLocalEnvironment.TimeoutRequest.StartDate  = CURRENT_TIMESTAMP;
+        SET OutputLocalEnvironment.TimeoutRequest.Interval   = 1800;
+        SET OutputLocalEnvironment.TimeoutRequest.Count      = -1; -- repeat forever
+        RETURN TRUE;
+    END;
+END MODULE;
