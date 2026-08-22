@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="generic_exception_handler.subflow" nsPrefix="generic_exception_handler.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="generic_exception_handler" bundleName="generic_exception_handler" pluginId="EXCEPTION_HANDLER"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/EXCEPTION_HANDLER/icons/full/obj16/generic_exception_handler.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/EXCEPTION_HANDLER/icons/full/obj30/generic_exception_handler.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="106,107">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="generic_exception_handler" pluginId="EXCEPTION_HANDLER"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="400,108">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="generic_exception_handler" pluginId="EXCEPTION_HANDLER"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="207,107" computeExpression="esql://routine/#exceptionHandler.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="exceptionHandler"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="149,159" destination="file" filePath="/LOG/system/NIBSS_TMS/tms_EXC.log" pattern="****************************START EXCEPTION LIST****************************&#xD;&#xA;[${CURRENT_TIMESTAMP}] :  Entire Exception List Trace ::${ExceptionList}&#xD;&#xA;${Root}&#xD;&#xA;*********************************************************************************&#xD;&#xA;*********************************************************************************&#xD;&#xA;">
+        <translation xmi:type="utility:ConstantString" string="EXC_EntireTrace"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

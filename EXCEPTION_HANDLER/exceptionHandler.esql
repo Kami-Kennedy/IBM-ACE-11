@@ -1,0 +1,127 @@
+CREATE COMPUTE MODULE exceptionHandler
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE exceptiondesc,inputChar,logdata CHARACTER;
+		DECLARE ccsid INTEGER;
+		DECLARE domainFldName CHARACTER FIELDNAME(InputBody);
+		DECLARE InpRef REFERENCE TO InputRoot;
+		DECLARE OutRef REFERENCE To OutputRoot;
+		DECLARE EnvRef REFERENCE To Environment;
+		SET exceptiondesc = getExceptionDesc(InputRoot,OutputRoot,InputExceptionList,Environment);
+		SET Environment.variable.exceptiondesc=exceptiondesc;
+
+		IF CONTAINS(exceptiondesc,'ParserException') THEN
+			SET inputChar='unable to parse the data';
+		ELSEIF CONTAINS(exceptiondesc, 'SocketException') THEN
+			SET inputChar = 'Connection timed out';
+		ELSE
+			CASE
+			WHEN domainFldName='XMLNSC' AND EXISTS(InputRoot.XMLNSC.*[]) THEN
+				SET inputChar=COALESCE(inputChar,0);
+				SET inputChar=CAST(ASBITSTREAM(InputRoot.XMLNSC) AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId ENCODING InputRoot.Properties.Encoding);
+			WHEN domainFldName='SOAP' AND EXISTS(InputRoot.SOAP.*[]) THEN
+				SET inputChar=CAST(ASBITSTREAM(InputRoot.SOAP) AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId ENCODING InputRoot.Properties.Encoding);
+			WHEN domainFldName='BLOB' AND EXISTS(InputRoot.BLOB.*[]) THEN
+				SET inputChar=CAST(ASBITSTREAM(InputRoot.BLOB) AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId ENCODING InputRoot.Properties.Encoding);
+			WHEN domainFldName='DFDL' AND EXISTS(InputRoot.DFDL.*[]) THEN
+				SET inputChar=CAST(ASBITSTREAM(InputRoot.DFDL) AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId ENCODING InputRoot.Properties.Encoding);
+			WHEN (domainFldName='JSON' AND EXISTS(InputRoot.JSON.*[])) THEN
+				SET inputChar=CAST(ASBITSTREAM(InputRoot.JSON) AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId ENCODING InputRoot.Properties.Encoding);
+			END CASE;
+		END IF;
+
+		IF inputChar is not null THEN
+		ELSE
+			SET inputChar=COALESCE(inputChar,'emptydata or unable to parse the data');
+		END IF;
+	
+	CASE
+		
+	WHEN EXISTS(InputRoot.XMLNSC.*[]) THEN
+		SET OutputRoot.XMLNSC.res.message = Environment.variable.exceptiondesc;
+	WHEN EXISTS(InputRoot.JSON.*[]) THEN
+		SET OutputRoot.JSON.Data.res.message = Environment.variable.exceptiondesc;
+	ELSE
+		
+	END CASE;
+	END;
+
+	CREATE PROCEDURE getExceptionDesc (IN InputRoot REFERENCE, IN OutputRoot REFERENCE, IN InputExceptionList REFERENCE , IN Environment REFERENCE)
+	RETURNS CHAR
+	BEGIN
+		--Copy the exception description
+		DECLARE continueLoop BOOLEAN TRUE;
+		DECLARE exceptionData CHAR;
+		DECLARE messageText CHARACTER '';
+		DECLARE envvar REFERENCE TO Environment.Variables;
+		DECLARE inRef2 REFERENCE TO InputExceptionList.*[1];
+		DECLARE insertRef REFERENCE TO InputExceptionList.*[1];
+		DECLARE exceptionName CHARACTER '';
+		SET continueLoop = TRUE;
+		MOVE inRef2 TO InputExceptionList;
+		-- IF CARDINALITY(inRef2.RecoverableException[]) = 0 THEN
+		-- SET continueLoop = FALSE;
+		-- END IF;
+		SET inRef2 = InputExceptionList.*[1];
+		WHILE lastmove(inRef2) AND continueLoop DO
+			IF inRef2.Number is not null THEN
+				SET envvar.TraceFileExc.errorCode = inRef2.Number;
+				SET exceptionName = FIELDNAME(inRef2);
+				IF stringValidation(inRef2.Text) THEN
+					SET messageText = messageText||' '||inRef2.Text;
+				END IF;
+				MOVE insertRef TO inRef2.Insert[>];
+				WHILE LASTMOVE(insertRef) AND FIELDNAME(insertRef) = 'Insert' DO --- fetch description from Insert[]
+					IF NOT LENGTH(insertRef.Text) = 1 AND
+						stringValidation(insertRef.Text)THEN
+						SET messageText = messageText||' '||insertRef.Text;
+					END IF;
+					MOVE insertRef NEXTSIBLING;
+				END WHILE;
+			END IF;
+			MOVE inRef2 LASTCHILD;
+		END WHILE;
+		SET exceptionData = exceptionName||':'||messageText;
+		SET envvar.TraceFileExc.errorType = exceptionName;
+		RETURN exceptionData;
+	END;
+
+	CREATE PROCEDURE stringValidation (IN text CHARACTER)
+	RETURNS BOOLEAN
+	BEGIN
+		IF NOT CONTAINS(text, 'Node throwing exception') AND
+			NOT CONTAINS(text, 'Caught exception and rethrowing') AND
+			NOT CONTAINS(text, 'Error detected, rethrowing') AND
+			NOT CONTAINS(text, 'Error occured in procedure') AND
+			NOT LENGTH(text) = 1 THEN
+
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+	END;
+
+	CREATE PROCEDURE getFlowDetails(IN InputRoot REFERENCE , IN InputExceptionList REFERENCE , IN Environment REFERENCE)
+	BEGIN
+		--Taking messge flow details
+		--Taking message flow name , node name
+		DECLARE nodeName CHARACTER;
+		DECLARE label CHARACTER;
+		DECLARE flowName, flowNameone,flowNametwo CHARACTER;
+		DECLARE fieldPosition INTEGER;
+		DECLARE excListRef REFERENCE TO InputExceptionList.*[>];
+		SET label = excListRef.Label;
+		SET flowNameone = excListRef.Name;
+		SET fieldPosition = POSITION('.' IN label);
+		SET flowNametwo = SUBSTRING(flowNameone AFTER '.');
+		IF flowNametwo = '' THEN
+			SET flowName = SUBSTRING(flowNameone BEFORE '#');
+		ELSE
+			SET flowName = SUBSTRING(flowNametwo BEFORE '#');
+		END IF;
+		SET nodeName = SUBSTRING(label FROM (fieldPosition+1));
+		SET Environment.Variables.TraceFileExc.FlowName = flowName;
+		SET Environment.Variables.TraceFileExc.NodeName = nodeName;
+		DECLARE a CHARACTER;
+	END;
+END MODULE;
