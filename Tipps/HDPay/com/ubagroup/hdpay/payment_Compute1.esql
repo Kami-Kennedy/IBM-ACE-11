@@ -1,0 +1,10 @@
+BROKER SCHEMA HDPay.com.ubagroup.hdpay
+
+CREATE COMPUTE MODULE payment_Compute1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.Variables.JWT.responseCode = InputRoot.JSON.Data.responseCode;
+		SET Environment.Variables.JWT.responseMessage = InputRoot.JSON.Data.responseMessage;
+		RETURN TRUE;
+	END;
+END MODULE;

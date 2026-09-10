@@ -1,21 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>DataTopUpJava</name>
+	<name>Tipps</name>
 	<comment></comment>
 	<projects>
-		<project>EXCEPTION_HANDLER</project>
+		<project>TippsJava</project>
 	</projects>
 	<buildSpec>
-		<buildCommand>
-			<name>org.eclipse.jdt.core.javabuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
-		<buildCommand>
-			<name>com.ibm.etools.mft.jcn.jcnbuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
 		<buildCommand>
 			<name>com.ibm.etools.mft.applib.applibbuilder</name>
 			<arguments>
@@ -102,6 +92,11 @@
 			</arguments>
 		</buildCommand>
 		<buildCommand>
+			<name>com.ibm.etools.mft.msg.assembly.messageAssemblyBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
 			<name>com.ibm.etools.msg.validation.dfdl.dfdlqnamevalidator</name>
 			<arguments>
 			</arguments>
@@ -118,9 +113,6 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>org.eclipse.jdt.core.javanature</nature>
-		<nature>com.ibm.etools.mft.jcn.jcnnature</nature>
-		<nature>com.ibm.etools.mft.bar.ext.barnature</nature>
 		<nature>com.ibm.etools.msgbroker.tooling.applicationNature</nature>
 		<nature>com.ibm.etools.msgbroker.tooling.messageBrokerProjectNature</nature>
 	</natures>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><Broker>
+<CompiledApplication>
+<ConfigurableProperty uri="startMode"/>
+<ConfigurableProperty uri="javaIsolation"/>
+</CompiledApplication>
+<CompiledMessageFlow name="HDPay.com.ubagroup.hdpay.tipss_acct_val">
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#additionalInstances"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#notificationThresholdMsgsPerSec"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#maximumRateMsgsPerSec"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#processingTimeoutSec"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#processingTimeoutAction"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#wlmPolicy"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#commitCount"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#commitInterval"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#coordinatedTransaction"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#consumerPolicySet"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#providerPolicySet"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#consumerPolicySetBindings"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#providerPolicySetBindings"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#securityProfileName"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#monitoringProfile"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#startMode"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#startInstancesWhenFlowStarts"/>
+<ConfigurableProperty override="http://172.20.236.28:7181/jwt/esb/v3/verify" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#AUTH_URL"/>
+<ConfigurableProperty override="LORILOAN" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#username"/>
+<ConfigurableProperty override="/hdpay/payment/acctlookup" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Input.URLSpecifier"/>
+<ConfigurableProperty override="yes" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Input.useHTTPS"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Input.decompressInputMessage"/>
+<ConfigurableProperty override="360" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Input.timeoutForClient"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Input.faultFormat"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Input.validateMaster"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Input.securityProfileName"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Reply.validateMaster"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Java Compute.javaClassLoader"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Java Compute.validateMaster"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Compute.dataSource"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Compute.connectDatasourceBeforeFlowStarts"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Compute.validateMaster"/>
+<ConfigurableProperty override="/LOG/system/HDPAY/hdpay.log" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Trace.filePath"/>
+<ConfigurableProperty override="/LOG/system/HDPAY/hdpay.log" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Trace1.filePath"/>
+<ConfigurableProperty override="/LOG/system/HDPAY/hdpay.log" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Trace2.filePath"/>
+<ConfigurableProperty override="http://172.20.236.28:7181/jwt/esb/v3/verify" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.URLSpecifier"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.timeoutForServer"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.httpProxyLocation"/>
+<ConfigurableProperty override="1.1" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.httpVersion"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.enableKeepAlive"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.requestCompressionType"/>
+<ConfigurableProperty override="TLS" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.protocol"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.allowedCiphers"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.hostnameChecking"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.keyAlias"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.enableCRLCheck"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.acceptCompressedResponses"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.validateMaster"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#HTTP Request.securityProfileName"/>
+<ConfigurableProperty override="/LOG/system/HDPAY/hdpay.log" uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Trace3.filePath"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Compute1.dataSource"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Compute1.connectDatasourceBeforeFlowStarts"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_acct_val#Compute1.validateMaster"/>
+</CompiledMessageFlow>
+<CompiledMessageFlow name="HDPay.com.ubagroup.hdpay.tipss_payment">
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#additionalInstances"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#notificationThresholdMsgsPerSec"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#maximumRateMsgsPerSec"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#processingTimeoutSec"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#processingTimeoutAction"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#wlmPolicy"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#commitCount"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#commitInterval"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#coordinatedTransaction"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#consumerPolicySet"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#providerPolicySet"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#consumerPolicySetBindings"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#providerPolicySetBindings"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#securityProfileName"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#monitoringProfile"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#startMode"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#startInstancesWhenFlowStarts"/>
+<ConfigurableProperty override="http://172.20.236.28:7181/jwt/esb/v3/verify" uri="HDPay.com.ubagroup.hdpay.tipss_payment#AUTH_URL"/>
+<ConfigurableProperty override="LORILOAN" uri="HDPay.com.ubagroup.hdpay.tipss_payment#username"/>
+<ConfigurableProperty override="/hdpay/payment" uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Input.URLSpecifier"/>
+<ConfigurableProperty override="yes" uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Input.useHTTPS"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Input.decompressInputMessage"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Input.timeoutForClient"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Input.faultFormat"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Input.validateMaster"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Input.securityProfileName"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#Java Compute.javaClassLoader"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#Java Compute.validateMaster"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Reply.validateMaster"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#Compute.dataSource"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#Compute.connectDatasourceBeforeFlowStarts"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#Compute.validateMaster"/>
+<ConfigurableProperty override="/LOG/system/HDPAY/hdpay.log" uri="HDPay.com.ubagroup.hdpay.tipss_payment#Trace.filePath"/>
+<ConfigurableProperty override="/LOG/system/HDPAY/hdpay.log" uri="HDPay.com.ubagroup.hdpay.tipss_payment#Trace1.filePath"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#Compute1.dataSource"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#Compute1.connectDatasourceBeforeFlowStarts"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#Compute1.validateMaster"/>
+<ConfigurableProperty override="/LOG/system/HDPAY/hdpay.log" uri="HDPay.com.ubagroup.hdpay.tipss_payment#Trace2.filePath"/>
+<ConfigurableProperty override="/LOG/system/HDPAY/hdpay.log" uri="HDPay.com.ubagroup.hdpay.tipss_payment#Trace3.filePath"/>
+<ConfigurableProperty override="http://172.20.236.28:7181/jwt/esb/v3/verify" uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.URLSpecifier"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.timeoutForServer"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.httpProxyLocation"/>
+<ConfigurableProperty override="1.1" uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.httpVersion"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.enableKeepAlive"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.requestCompressionType"/>
+<ConfigurableProperty override="TLS" uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.protocol"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.allowedCiphers"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.hostnameChecking"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.keyAlias"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.enableCRLCheck"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.acceptCompressedResponses"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.validateMaster"/>
+<ConfigurableProperty uri="HDPay.com.ubagroup.hdpay.tipss_payment#HTTP Request.securityProfileName"/>
+</CompiledMessageFlow>
+</Broker>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deploy:Deploy xmlns:deploy="http://www.ibm.com/xmlns/prod/wmb/deploy/6.0.0" overrideConfigurableProperties="true" includeESQL="false">
+  <deployables>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollection/HDPay/HDPayJava.jar">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollection\HDPay\HDPayJava.jar.&#xA;Successfully added file TipssCollection\HDPay\HDPayJava.jar to BAR file.&#xA;Elapsed time: 0 second(s).&#xA;" severity="0"/>
+      <barEntry name="HDPay/HDPayJava.jar"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollection/HDPay/META-INF/broker.xml">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollection\HDPay\META-INF\broker.xml.&#xA;Successfully added file TipssCollection\HDPay\META-INF\broker.xml to BAR file.&#xA;" severity="0"/>
+      <barEntry name="HDPay\META-INF\broker.xml"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollection/HDPay/application.descriptor">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollection\HDPay\application.descriptor.&#xA;Successfully added file TipssCollection\HDPay\application.descriptor to BAR file.&#xA;Elapsed time: 0 second(s).&#xA;&#xA;Successfully added file TipssCollection\HDPay\application.descriptor to BAR file.&#xA;" severity="0"/>
+      <barEntry name="application.descriptor"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollection/HDPay/com/ubagroup/hdpay/acct_val_Compute.esql">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollection\HDPay\com\ubagroup\hdpay\acct_val_Compute.esql.&#xA;Successfully added file TipssCollection\HDPay\com\ubagroup\hdpay\acct_val_Compute.esql to BAR file.&#xA;" severity="0"/>
+      <barEntry name="HDPay\com\ubagroup\hdpay\acct_val_Compute.esql"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollection/HDPay/com/ubagroup/hdpay/acct_val_Compute1.esql">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollection\HDPay\com\ubagroup\hdpay\acct_val_Compute1.esql.&#xA;Successfully added file TipssCollection\HDPay\com\ubagroup\hdpay\acct_val_Compute1.esql to BAR file.&#xA;" severity="0"/>
+      <barEntry name="HDPay\com\ubagroup\hdpay\acct_val_Compute1.esql"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollection/HDPay/com/ubagroup/hdpay/payment_Compute.esql">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollection\HDPay\com\ubagroup\hdpay\payment_Compute.esql.&#xA;Successfully added file TipssCollection\HDPay\com\ubagroup\hdpay\payment_Compute.esql to BAR file.&#xA;" severity="0"/>
+      <barEntry name="HDPay\com\ubagroup\hdpay\payment_Compute.esql"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollection/HDPay/com/ubagroup/hdpay/payment_Compute1.esql">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollection\HDPay\com\ubagroup\hdpay\payment_Compute1.esql.&#xA;Successfully added file TipssCollection\HDPay\com\ubagroup\hdpay\payment_Compute1.esql to BAR file.&#xA;" severity="0"/>
+      <barEntry name="HDPay\com\ubagroup\hdpay\payment_Compute1.esql"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1731050629668" workspaceResource="/TipssCollection/HDPay/com/ubagroup/hdpay/tipss_acct_val.msgflow">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollection\HDPay\com\ubagroup\hdpay\tipss_acct_val.msgflow.&#xA;Successfully added file TipssCollection\HDPay\com\ubagroup\hdpay\tipss_acct_val.msgflow to BAR file.&#xA;" severity="0"/>
+      <barEntry name="HDPay\com\ubagroup\hdpay\tipss_acct_val.msgflow"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1731050650830" workspaceResource="/TipssCollection/HDPay/com/ubagroup/hdpay/tipss_payment.msgflow">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollection\HDPay\com\ubagroup\hdpay\tipss_payment.msgflow.&#xA;Successfully added file TipssCollection\HDPay\com\ubagroup\hdpay\tipss_payment.msgflow to BAR file.&#xA;" severity="0"/>
+      <barEntry name="HDPay\com\ubagroup\hdpay\tipss_payment.msgflow"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollection/application.descriptor">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollection\application.descriptor.&#xA;Successfully added file TipssCollection\application.descriptor to BAR file.&#xA;Elapsed time: 0 second(s).&#xA;&#xA;Successfully added file TipssCollection\application.descriptor to BAR file.&#xA;" severity="0"/>
+      <barEntry name="application.descriptor"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1731051315929" workspaceResource="/TipssCollectionJava/.classpath">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollectionJava\.classpath.&#xA;Successfully added file TipssCollectionJava\.classpath to BAR file.&#xA;Elapsed time: 0.141 second(s).&#xA;" severity="0"/>
+      <barEntry name="TipssCollectionJava.jar"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollectionJava/libs/slf4j-api-1.7.7.jar">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollectionJava\libs\slf4j-api-1.7.7.jar.&#xA;Successfully added file TipssCollectionJava\libs\slf4j-api-1.7.7.jar to BAR file.&#xA;Elapsed time: 0 second(s).&#xA;" severity="0"/>
+      <barEntry name="libs/slf4j-api-1.7.7.jar"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollectionJava/libs/json-20210307.jar">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollectionJava\libs\json-20210307.jar.&#xA;Successfully added file TipssCollectionJava\libs\json-20210307.jar to BAR file.&#xA;Elapsed time: 0 second(s).&#xA;" severity="0"/>
+      <barEntry name="libs/json-20210307.jar"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollectionJava/libs/commons-codec-1.7.jar">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollectionJava\libs\commons-codec-1.7.jar.&#xA;Successfully added file TipssCollectionJava\libs\commons-codec-1.7.jar to BAR file.&#xA;Elapsed time: 0 second(s).&#xA;" severity="0"/>
+      <barEntry name="libs/commons-codec-1.7.jar"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollectionJava/libs/logback-core-1.3.0-alpha14.jar">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollectionJava\libs\logback-core-1.3.0-alpha14.jar.&#xA;Successfully added file TipssCollectionJava\libs\logback-core-1.3.0-alpha14.jar to BAR file.&#xA;Elapsed time: 0 second(s).&#xA;" severity="0"/>
+      <barEntry name="libs/logback-core-1.3.0-alpha14.jar"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollectionJava/libs/logback-classic-1.2.2.jar">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollectionJava\libs\logback-classic-1.2.2.jar.&#xA;Successfully added file TipssCollectionJava\libs\logback-classic-1.2.2.jar to BAR file.&#xA;Elapsed time: 0 second(s).&#xA;" severity="0"/>
+      <barEntry name="libs/logback-classic-1.2.2.jar"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollectionJava/libs/okio-1.6.0.jar">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollectionJava\libs\okio-1.6.0.jar.&#xA;Successfully added file TipssCollectionJava\libs\okio-1.6.0.jar to BAR file.&#xA;Elapsed time: 0 second(s).&#xA;" severity="0"/>
+      <barEntry name="libs/okio-1.6.0.jar"/>
+    </deployable>
+    <deployable deployed="true" barResourceTimeStamp="1730903232000" workspaceResource="/TipssCollectionJava/libs/okhttp-2.7.5.jar">
+      <deployableStatus code="0" key="DEPLOYABLE_LAST_COMPILE_STATUS" message="&#xA;Processing file TipssCollectionJava\libs\okhttp-2.7.5.jar.&#xA;Successfully added file TipssCollectionJava\libs\okhttp-2.7.5.jar to BAR file.&#xA;Elapsed time: 0 second(s).&#xA;" severity="0"/>
+      <barEntry name="libs/okhttp-2.7.5.jar"/>
+    </deployable>
+  </deployables>
+</deploy:Deploy>

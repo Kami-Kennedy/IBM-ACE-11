@@ -1,0 +1,31 @@
+BROKER SCHEMA HDPay.com.ubagroup.hdpay
+
+CREATE COMPUTE MODULE acct_val_Compute
+	DECLARE AUTH_URL EXTERNAL CHARACTER '';
+	DECLARE username EXTERNAL CHARACTER '';
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		/*=====STORING SOAP REQUEST INTO ENVIRONMENT===*/
+		SET Environment.Variables = InputRoot.JSON.Data;
+		/*=====STORING JWT HTTP INPUT HEADERS INTO ENVIRONMENT===*/
+		SET Environment.Variables.JWTHeader.username = username;
+		SET Environment.Variables.JWTHeader.token = InputRoot.HTTPInputHeader."Token";
+		-- CONSTRUCTION OF JWT REQUEST
+		SET OutputRoot.HTTPRequestHeader."Content-Type" = 'application/json';
+		SET OutputRoot.HTTPRequestHeader."Authorization" = Environment.Variables.JWTHeader.token;
+		SET OutputRoot.JSON.Data.username = Environment.Variables.JWTHeader.username;
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = AUTH_URL;
+		PROPAGATE TO TERMINAL 'out1';
+		IF Environment.Variables.JWT.responseCode = '00' AND Environment.Variables.JWT.responseMessage = 'Token successfully validated' THEN
+			--CONTINUE THE BELOW PROCESS
+			SET OutputRoot.JSON.Data = Environment.Variables;
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			SET OutputRoot.JSON.Data.responseCode = '99';
+			SET OutputRoot.JSON.Data.responseMessage = 'Token validation failed';
+			PROPAGATE TO TERMINAL 'out2';
+			RETURN FALSE;
+		END IF;
+		RETURN FALSE;
+	END;
+END MODULE;
